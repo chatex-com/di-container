@@ -1,4 +1,4 @@
-module github.com/chatex-com/dependency-injection
+module github.com/chatex-com/di-container
 
 go 1.14
 

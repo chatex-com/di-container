@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/chatex-com/dependency-injection"
+	"github.com/chatex-com/di-container"
 )
 
 type Config struct {

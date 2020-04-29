@@ -10,7 +10,7 @@ linters-settings:
   lll:
     line-length: 140
   goimports:
-    local-prefixes: http://github.com/chatex-com/dependency-injection
+    local-prefixes: https://github.com/chatex-com/di-container
   gocritic:
     enabled-tags:
       - diagnostic
