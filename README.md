@@ -7,4 +7,5 @@
 ## Example
 
 [Simple example of using](/examples/simple/main.go)
+[Use tags](/examples/tags/main.go)
 
