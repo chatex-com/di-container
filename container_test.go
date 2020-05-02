@@ -150,7 +150,7 @@ func TestContainerLoad(t *testing.T) {
 	Convey("load struct value", t, func() {
 		container := NewContainer()
 
-		type A struct { value string }
+		type A struct{ value string }
 		actual := A{value: "foo bar"}
 		container.Set(actual)
 
@@ -166,7 +166,7 @@ func TestContainerLoad(t *testing.T) {
 	Convey("load struct value as pointer", t, func() {
 		container := NewContainer()
 
-		type A struct { value string }
+		type A struct{ value string }
 		actual := &A{value: "foo bar"}
 		container.Set(actual)
 
@@ -181,7 +181,7 @@ func TestContainerLoad(t *testing.T) {
 	Convey("load value by name", t, func() {
 		container := NewContainer()
 
-		type A struct { value string }
+		type A struct{ value string }
 		container.Set(A{value: "foo bar"})
 		container.Set(A{value: "foo baz"}, "baz")
 
@@ -242,5 +242,90 @@ func TestContainerLoad(t *testing.T) {
 
 		So(err, ShouldBeError)
 		So(err, ShouldEqual, ErrUnableToSetValue)
+	})
+}
+
+func TestContainerResolve(t *testing.T) {
+	Convey("resolve struct", t, func() {
+		c := NewContainer()
+
+		type A struct{}
+		type B struct {
+			Foo int
+			Bar string
+			Baz float64
+			A   *A
+		}
+
+		c.Set(123)
+		c.Set("foo bar")
+		c.Set(345.67)
+		a := &A{}
+		c.Set(a)
+
+		b := B{}
+		err := c.Resolve(&b)
+
+		So(err, ShouldBeNil)
+		So(b.Foo, ShouldEqual, 123)
+		So(b.Bar, ShouldEqual, "foo bar")
+		So(b.Baz, ShouldEqual, 345.67)
+		So(b.A, ShouldEqual, a)
+	})
+
+	Convey("support skip tag", t, func() {
+		c := NewContainer()
+
+		c.Set(123)
+		c.Set("foo bar")
+
+		type B struct {
+			Foo int
+			Bar string `di:"-"`
+		}
+
+		b := B{}
+		err := c.Resolve(&b)
+
+		So(err, ShouldBeNil)
+		So(b.Foo, ShouldEqual, 123)
+		So(b.Bar, ShouldBeEmpty)
+	})
+
+	Convey("support di name in tag", t, func() {
+		c := NewContainer()
+
+		c.Set(123)
+		c.Set(234, "foo")
+
+		type B struct {
+			Foo int `di:"foo"`
+		}
+
+		b := B{}
+		err := c.Resolve(&b)
+
+		So(err, ShouldBeNil)
+		So(b.Foo, ShouldEqual, 234)
+	})
+
+	Convey("support di optional tag", t, func() {
+		c := NewContainer()
+
+		type B struct {
+			Foo string `di:",optional"`
+		}
+
+		b := B{}
+		err := c.Resolve(&b)
+
+		So(err, ShouldBeNil)
+		So(b.Foo, ShouldBeEmpty)
+
+		c.Set("bar")
+		err = c.Resolve(&b)
+
+		So(err, ShouldBeNil)
+		So(b.Foo, ShouldEqual, "bar")
 	})
 }
