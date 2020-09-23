@@ -88,7 +88,7 @@ func (c *Container) load(v *reflect.Value, name ...string) error {
 
 	iv, exist := c.items[id]
 	if !exist {
-		return ErrUnknownItem
+		return fmt.Errorf("%q: %w", id, ErrUnknownItem)
 	}
 
 	it := iv.Type()
@@ -97,7 +97,7 @@ func (c *Container) load(v *reflect.Value, name ...string) error {
 	if rt.Kind() == reflect.Ptr && it.Kind() == reflect.Ptr {
 		iv = iv.Elem()
 		if !iv.CanAddr() {
-			return ErrUnableToSetPointer
+			return fmt.Errorf("%q: %w", id, ErrUnableToSetPointer)
 		}
 		rv.Set(iv.Addr())
 
@@ -113,7 +113,7 @@ func (c *Container) load(v *reflect.Value, name ...string) error {
 	}
 
 	if !rv.CanSet() {
-		return ErrUnableToSetValue
+		return fmt.Errorf("%q: %w", id, ErrUnableToSetValue)
 	}
 
 	rv.Set(iv)
@@ -152,7 +152,7 @@ func (c *Container) Resolve(element interface{}) error {
 
 		err := c.load(&fv, name)
 
-		if err == ErrUnknownItem && opts.Contains(tagOptional) {
+		if errors.Is(err, ErrUnknownItem) && opts.Contains(tagOptional) {
 			continue
 		}
 
@@ -165,6 +165,10 @@ func (c *Container) Resolve(element interface{}) error {
 }
 
 func (c *Container) generateID(t reflect.Type, name string) string {
+	if name != "" {
+		return name
+	}
+
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
