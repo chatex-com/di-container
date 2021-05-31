@@ -108,7 +108,7 @@ func (c *Container) load(v *reflect.Value, name ...string) error {
 		rv = rv.Elem()
 	}
 
-	if it.Kind() == reflect.Ptr {
+	if rt.Kind() != reflect.Interface && it.Kind() == reflect.Ptr {
 		iv = iv.Elem()
 	}
 

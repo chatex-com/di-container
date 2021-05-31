@@ -150,6 +150,8 @@ type testInterface interface {
 type testImpl struct {}
 func (testImpl) do() {}
 
+type testPointerImpl struct {}
+func (*testPointerImpl) do() {}
 
 func TestContainerLoad(t *testing.T) {
 	Convey("load scalar values", t, func() {
@@ -404,10 +406,27 @@ func TestContainerLoad(t *testing.T) {
 		})
 	})
 
-	Convey("loading reference to the interface variable", t, func() {
+	Convey("loading struct to the interface variable", t, func() {
 		container := NewContainer()
 
 		a := testImpl{}
+		container.Set(&a, "implementation")
+
+		var actual testInterface
+		err := container.Load(&actual, "implementation")
+
+		Convey("shouldn't raise an error", func() {
+			So(err, ShouldBeNil)
+		})
+		Convey("should be correct reference to the variable", func() {
+			So(actual, ShouldNotBeNil)
+		})
+	})
+
+	Convey("loading reference to the interface variable", t, func() {
+		container := NewContainer()
+
+		a := testPointerImpl{}
 		container.Set(&a, "implementation")
 
 		var actual testInterface
@@ -546,10 +565,31 @@ func TestContainerResolve(t *testing.T) {
 		})
 	})
 
-	Convey("resolving struct with field with type interface", t, func() {
+	Convey("resolving struct with field with type interface to struct", t, func() {
 		c := NewContainer()
 
 		c.Set(&testImpl{}, "foo")
+
+		type B struct {
+			Foo testInterface `di:"foo"`
+		}
+
+		b := B{}
+		err := c.Resolve(&b)
+
+		Convey("shouldn't raise an error", func() {
+			So(err, ShouldBeNil)
+		})
+
+		Convey("should correct resolve value", func() {
+			So(b.Foo, ShouldNotBeNil)
+		})
+	})
+
+	Convey("resolving struct with field with type interface to pointer to struct", t, func() {
+		c := NewContainer()
+
+		c.Set(&testPointerImpl{}, "foo")
 
 		type B struct {
 			Foo testInterface `di:"foo"`
